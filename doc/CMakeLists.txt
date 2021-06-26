@@ -10,7 +10,7 @@ if(Doxygen_FOUND)
     # request to configure the file
     configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
 
-    file(GLOB_RECURSE PROJECT_HEADERS "${CMAKE_SOURCE_DIR}/src")
+    file(GLOB_RECURSE PROJECT_HEADERS "${CMAKE_SOURCE_DIR}/project")
     
     add_custom_command(OUTPUT ${DOXYGEN_INDEX_FILE}
                        DEPENDS ${PROJECT_HEADERS} 
