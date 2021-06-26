@@ -108,27 +108,35 @@ if(BUILD_DOC)
 endif(BUILD_DOC)
 
 if(BUILD_TESTS)
-	if(NOT Catch2_FOUND)
-		find_package(Catch2 3 REQUIRED)
-	endif()
+    if(NOT Catch2_FOUND)
+	find_package(Catch2 3 REQUIRED)
+    endif()
+
+    if(ENABLE_MEMCHECK)
+        message(STATUS "Looking for valgrind")
+        list(APPEND CMAKE_MESSAGE_INDENT "  ")
+        find_program(MEMORYCHECK_COMMAND valgrind)
+    	set(MEMORYCHECK_COMMAND_OPTIONS "--trace-children=yes --leak-check=full")
+    	set(MEMORYCHECK_SUPPRESSIONS_FILE "${CMAKE_CURRENT_SOURCE_DIR}/valgrind_suppress.txt")
+    	message(STATUS "MEMORYCHECK_COMMAND           = ${MEMORYCHECK_COMMAND}")
+    	message(STATUS "MEMORYCHECK_COMMAND_OPTIONS   = ${MEMORYCHECK_COMMAND_OPTIONS}")
+    	message(STATUS "MEMORYCHECK_SUPPRESSIONS_FILE = ${MEMORYCHECK_SUPPRESSIONS_FILE}")
+        list(POP_BACK CMAKE_MESSAGE_INDENT)
+    endif(ENABLE_MEMCHECK)
+
 endif(BUILD_TESTS)
 
 #############################
-### MyCppProject
+### Project
 #############################
-add_library(MyCppProject SHARED "" )
-add_subdirectory(src)
-target_include_directories(MyCppProject PUBLIC
-                       $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> # for headers when building
-                       $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
-#############################
-### Tests
-#############################
 if(BUILD_TESTS)
     include(CTest)
-    add_subdirectory(tests)
 endif(BUILD_TESTS)
+
+add_subdirectory(project)
+
+
 
 #############################
 ### Documentation
@@ -137,12 +145,6 @@ if(BUILD_DOC)
    add_subdirectory(doc)
 endif(BUILD_DOC)
 
-#############################
-### benchmarks
-#############################
-if(ENABLE_MICRO_BENCHMARKS)
-   add_subdirectory(benchmarks/micro)
-endif(ENABLE_MICRO_BENCHMARKS)
 
 #############################
 ### Installation
@@ -173,7 +175,7 @@ configure_package_config_file(
 
 # Install targets
 install(
-    TARGETS MyCppProject #plus others if there is
+    TARGETS app1 lib1 lib2 #plus others if there is
     EXPORT "${TARGETS_EXPORT_NAME}"
     LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}/"
     ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}/"
@@ -187,5 +189,3 @@ install( FILES "${project_config}" "${version_config}" DESTINATION "${config_ins
 #Install config file for exported targets
 install( EXPORT "${TARGETS_EXPORT_NAME}" NAMESPACE "${namespace}" DESTINATION "${config_install_dir}" )
 
-#Install includes 
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ FILES_MATCHING PATTERN *.h*)
